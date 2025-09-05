@@ -5,14 +5,14 @@ describe("Joomla Installation Wizard", () => {
 
     // --- Step 1: Site Setup ---
     cy.get("#jform_site_name").clear().type("JA Advanced Migration Tool Test");
-    cy.get("#jform_admin_email").clear().type("admin@example.com");
+    cy.get("#jform_admin_email").should("be.visible").type("admin@example.com");
     cy.get("#jform_admin_user").clear().type(Cypress.env("JOOMLA_ADMIN_USER"));
     cy.get("#jform_admin_password").clear().type(Cypress.env("JOOMLA_ADMIN_PASS"));
     cy.get("#jform_admin_password2").clear().type(Cypress.env("JOOMLA_ADMIN_PASS"));
     cy.contains("Next").click();
 
     // --- Step 2: Database Setup ---
-    cy.get("#jform_db_type").select("MySQLi");
+    cy.get("#jform_db_type").should("be.visible").select("MySQLi");
     cy.get("#jform_db_host").clear().type("mysql");
     cy.get("#jform_db_user").clear().type("root");
     cy.get("#jform_db_password").clear().type("root");
@@ -22,7 +22,7 @@ describe("Joomla Installation Wizard", () => {
     // --- Step 3: Finalization ---
     cy.contains("Install").click();
 
-    // Wait until installation finishes and remove installation folder link appears
+    // Wait for success screen
     cy.contains("Congratulations! Joomla is now installed.").should("be.visible");
 
     // Remove installation folder (required before Joomla lets you log in)
