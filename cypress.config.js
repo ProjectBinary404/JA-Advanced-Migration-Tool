@@ -8,7 +8,7 @@ module.exports = defineConfig({
     supportFile: "tests/support/e2e.js",
     env: {
       joomlaAdminUser: process.env.JOOMLA_ADMIN_USER || "admin",
-      joomlaAdminPass: process.env.JOOMLA_ADMIN_PASS || "admin123",
+      joomlaAdminPass: process.env.JOOMLA_ADMIN_PASS || "admin1234234",
     },
     setupNodeEvents(on, config) {
       return config;
