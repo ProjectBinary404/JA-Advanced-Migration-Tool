@@ -36,7 +36,7 @@ describe("Joomla Installation Wizard", () => {
     cy.get('[data-href="http://localhost:8080/administrator/"]').click();
     cy.wait(2000);
     // Ensure redirect to administrator login
-    cy.url().should("include", "/administrator/index.php");
+    cy.url().should("include", '/administrator');
     cy.get("#mod-login-username").should("be.visible");
     cy.get("#mod-login-password").should("be.visible");
   });

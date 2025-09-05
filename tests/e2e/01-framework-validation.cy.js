@@ -25,7 +25,7 @@ describe("Framework Validation", () => {
       Cypress.env("joomlaAdminPass"),
       true
     );
-
+    cy.cancelTour();
     // Log current URL for debugging
     cy.url().then((url) => {
       cy.log(`Current URL after login: ${url}`);
