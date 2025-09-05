@@ -31,9 +31,6 @@ jobs:
           JOOMLA_ADMIN_PASS: admin123
         ports:
           - 8080:80
-        depends_on:
-          mysql:
-            condition: service_healthy
         options: --health-cmd="curl -f http://localhost/ || exit 1" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
