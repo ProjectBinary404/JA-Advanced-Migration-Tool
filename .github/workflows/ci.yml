@@ -74,7 +74,7 @@ jobs:
         run: |
           echo "JOOMLA_BASE_URL=http://localhost:8080" >> $GITHUB_ENV
           echo "JOOMLA_ADMIN_USER=admin" >> $GITHUB_ENV
-          echo "JOOMLA_ADMIN_PASS=admin123" >> $GITHUB_ENV
+          echo "JOOMLA_ADMIN_PASS=admin123423454664@" >> $GITHUB_ENV
 
       - name: Run tests
         run: composer test
