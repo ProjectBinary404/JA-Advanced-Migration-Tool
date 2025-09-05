@@ -45,7 +45,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18.17.1"
+          node-version: "20.11.1" # modern Node with --import support
 
       - name: Install Composer dependencies
         run: composer install --no-progress --prefer-dist --optimize-autoloader
@@ -53,12 +53,14 @@ jobs:
       - name: Install NPM dependencies
         run: npm install
 
-      - name: Wait for Joomla to be ready
+      - name: Wait for Joomla Admin to be ready
         run: |
           for i in {1..30}; do
-            if curl -f http://localhost:8080 > /dev/null 2>&1; then
+            if curl -f http://localhost:8080/administrator/ > /dev/null 2>&1; then
+              echo "✅ Joomla admin page is ready"
               break
             fi
+            echo "⏳ Waiting for Joomla admin page..."
             sleep 10
           done
 
@@ -74,6 +76,7 @@ jobs:
           JOOMLA_BASE_URL: http://localhost:8080
           JOOMLA_ADMIN_USER: admin
           JOOMLA_ADMIN_PASS: admin123
+          DBUS_SESSION_BUS_ADDRESS: /dev/null # silence dbus warnings
 
       - name: Get version from XML
         id: get_version
@@ -88,7 +91,6 @@ jobs:
           if [ -z "$LATEST_TAG" ]; then
             NEW_VERSION="0.0.1"
           else
-            # Increment patch version
             IFS='.' read -r major minor patch <<< "$LATEST_TAG"
             NEW_VERSION="$major.$minor.$((patch + 1))"
           fi
@@ -118,6 +120,9 @@ jobs:
 
       - name: Create Release
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: gh release create v${{ steps.increment_version.outputs.new_version }} cypress/fixtures/com_cmsmigrator_v${{ steps.increment_version.outputs.new_version }}.zip --title "Release v${{ steps.increment_version.outputs.new_version }}" --notes "Automated release of Joomla Advanced Migration Tool v${{ steps.increment_version.outputs.new_version }}"
+        run: gh release create v${{ steps.increment_version.outputs.new_version }} \
+              cypress/fixtures/com_cmsmigrator_v${{ steps.increment_version.outputs.new_version }}.zip \
+              --title "Release v${{ steps.increment_version.outputs.new_version }}" \
+              --notes "Automated release of Joomla Advanced Migration Tool v${{ steps.increment_version.outputs.new_version }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
