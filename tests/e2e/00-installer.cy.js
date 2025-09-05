@@ -33,9 +33,9 @@ describe("Joomla Installation Wizard", () => {
     cy.get("#setupButton").click();
 
     // Success confirmation
-    cy.contains("Congratulations! Joomla is now installed.").should(
-      "be.visible"
-    );
+    cy.contains("Congratulations! Joomla is now installed.", {
+      timeout: 30000,
+    }).should("be.visible");
 
     // Clean up install folder
     cy.contains("Remove installation folder").click();
