@@ -1,6 +1,6 @@
 describe("Joomla Installation Wizard", () => {
   it("should complete Joomla installation", () => {
-    cy.visit("http://localhost/jtest/installation/index.php");
+    cy.visit("http://localhost:8000/installation/index.php");
 
     // --- Step 1: Site Name ---
     cy.get("#jform_site_name").clear().type("JA Advanced Migration Tool Test");
