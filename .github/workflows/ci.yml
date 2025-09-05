@@ -25,7 +25,7 @@ jobs:
           --health-retries=3
 
       joomla:
-        image: joomla:6.0-php8.3-fpm
+        image: joomla:6.0-php8.3-apache
         ports:
           - 8080:80
         options: >-
