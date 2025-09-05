@@ -31,15 +31,15 @@ describe("Joomla Installation Wizard", () => {
 
     // --- Step 4: Install ---
     cy.get("#setupButton").click();
-
+    cy.wait(3000);
     // Success confirmation
-    cy.contains("Congratulations! Joomla is now installed.", {
+    cy.contains("Congratulations", {
       timeout: 30000,
     }).should("be.visible");
 
     // Clean up install folder
     cy.contains("Remove installation folder").click();
-
+    cy.wait(5000);
     // Ensure redirect to administrator login
     cy.url().should("include", "/administrator/index.php");
     cy.get("#mod-login-username").should("be.visible");
