@@ -1,0 +1,126 @@
+name: CI and Release
+
+on:
+  push:
+    branches: [main, cypress-testing-beta]
+  pull_request:
+    branches: [main, cypress-testing-beta]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: joomla
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+      joomla:
+        image: joomla:4-apache
+        env:
+          JOOMLA_DB_HOST: mysql
+          JOOMLA_DB_USER: root
+          JOOMLA_DB_PASSWORD: root
+          JOOMLA_DB_NAME: joomla
+          JOOMLA_ADMIN_USER: admin
+          JOOMLA_ADMIN_PASS: admin123
+        ports:
+          - 8080:80
+        depends_on:
+          mysql:
+            condition: service_healthy
+        options: --health-cmd="curl -f http://localhost/ || exit 1" --health-interval=10s --health-timeout=5s --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+          extensions: zip, mysqli, pdo_mysql
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Install NPM dependencies
+        run: npm install
+
+      - name: Wait for Joomla to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -f http://localhost:8080 > /dev/null 2>&1; then
+              break
+            fi
+            sleep 10
+          done
+
+      - name: Get Joomla admin credentials
+        run: |
+          echo "JOOMLA_BASE_URL=http://localhost:8080" >> $GITHUB_ENV
+          echo "JOOMLA_ADMIN_USER=admin" >> $GITHUB_ENV
+          echo "JOOMLA_ADMIN_PASS=admin123" >> $GITHUB_ENV
+
+      - name: Run tests
+        run: composer test
+        env:
+          JOOMLA_BASE_URL: http://localhost:8080
+          JOOMLA_ADMIN_USER: admin
+          JOOMLA_ADMIN_PASS: admin123
+
+      - name: Get version from XML
+        id: get_version
+        run: |
+          VERSION=$(grep -oP '(?<=<version>)[^<]+' src/component/cmsmigrator.xml)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get latest tag and increment
+        id: increment_version
+        run: |
+          LATEST_TAG=$(git tag --sort=-version:refname | head -1 | sed 's/v//')
+          if [ -z "$LATEST_TAG" ]; then
+            NEW_VERSION="0.0.1"
+          else
+            # Increment patch version
+            IFS='.' read -r major minor patch <<< "$LATEST_TAG"
+            NEW_VERSION="$major.$minor.$((patch + 1))"
+          fi
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create component zip
+        run: |
+          cd src/component
+          zip -r ../../cypress/fixtures/com_cmsmigrator.zip .
+
+      - name: Rename zip with version
+        run: |
+          mv cypress/fixtures/com_cmsmigrator.zip cypress/fixtures/com_cmsmigrator_v${{ steps.increment_version.outputs.new_version }}.zip
+
+      - name: Update XML version
+        run: |
+          sed -i "s|<version>.*</version>|<version>${{ steps.increment_version.outputs.new_version }}</version>|" src/component/cmsmigrator.xml
+
+      - name: Commit version update
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add src/component/cmsmigrator.xml
+          git commit -m "Bump version to ${{ steps.increment_version.outputs.new_version }}"
+          git push
+
+      - name: Create Release
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: gh release create v${{ steps.increment_version.outputs.new_version }} cypress/fixtures/com_cmsmigrator_v${{ steps.increment_version.outputs.new_version }}.zip --title "Release v${{ steps.increment_version.outputs.new_version }}" --notes "Automated release of Joomla Advanced Migration Tool v${{ steps.increment_version.outputs.new_version }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
