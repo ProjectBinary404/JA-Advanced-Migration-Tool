@@ -31,37 +31,10 @@ describe("Joomla Installation Wizard", () => {
 
     // --- Step 4: Install ---
     cy.get("#setupButton").click();
-    
-    // Wait for installation to complete with multiple possible success indicators
-    cy.get("body", { timeout: 60000 }).should(($body) => {
-      const bodyText = $body.text();
-      expect(
-        bodyText.includes("Congratulations! Joomla is now installed") ||
-          bodyText.includes("Congratulations! Joomla has been installed") ||
-          bodyText.includes("Installation Complete") ||
-          bodyText.includes("Joomla is now installed") ||
-          $body.find("button:contains('Remove installation folder')").length > 0
-      ).to.be.true;
-    });
-
-    // Clean up install folder - look for the button more flexibly
-    cy.get("body").then(($body) => {
-      if (
-        $body.find("button:contains('Remove installation folder')").length > 0
-      ) {
-        cy.contains("Remove installation folder").click();
-      } else if (
-        $body.find("a:contains('Remove installation folder')").length > 0
-      ) {
-        cy.contains("a", "Remove installation folder").click();
-      } else if (
-        $body.find(":contains('Remove installation folder')").length > 0
-      ) {
-        cy.contains("Remove installation folder").click();
-      }
-    });
-
-    cy.wait(5000);
+    cy.get('body', { timeout: 20000 })
+      .should('contain.text', 'Congratulations! Your Joomla site is ready.');
+    cy.get(cy.get('[data-href="http://localhost:8080/administrator/"]')).click();
+    cy.wait(2000);
     // Ensure redirect to administrator login
     cy.url().should("include", "/administrator/index.php");
     cy.get("#mod-login-username").should("be.visible");
