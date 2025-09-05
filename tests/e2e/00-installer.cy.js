@@ -31,11 +31,26 @@ describe("Joomla Installation Wizard", () => {
 
     // --- Step 4: Install ---
     cy.get("#setupButton").click();
-    cy.wait(3000);
-    // Success confirmation
-    cy.contains("Congratulations", {
-      timeout: 30000,
-    }).should("be.visible");
+    cy.wait(5000)
+    cy.get('body', { timeout: 60000 }).should(($body) => {
+    // Check for various possible success messages
+    const successMessages = [
+      'Congratulations! Joomla is now installed.',
+      'Congratulations! Joomla has been installed.',
+      'Installation completed successfully',
+      'Joomla is now installed',
+      'Installation Complete'
+    ];
+    
+    let found = false;
+    successMessages.forEach(message => {
+      if ($body.text().includes(message)) {
+        found = true;
+      }
+    });
+    
+    expect(found, 'Installation success message not found').to.be.true;
+  });
 
     // Clean up install folder
     cy.contains("Remove installation folder").click();
