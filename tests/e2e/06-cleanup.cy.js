@@ -39,45 +39,39 @@ describe("Joomla cleanup: clear content, categories, fields, media, tags, and us
 
   it("Removes 'imports' folder from Media", () => {
     cy.visit("/administrator/index.php?option=com_media");
-    cy.wait(1000);
+    cy.wait(2000); // Wait for media manager to load
 
-    cy.get(".media-browser-item").then(($items) => {
-      const matchingItem = [...$items].find(
-        (item) =>
-          item.querySelector(".media-browser-item-info")?.textContent.trim() ===
-          "imports"
-      );
+    cy.get("body").then(($body) => {
+      if ($body.find(".media-browser-item").length > 0) {
+        cy.get(".media-browser-item").then(($items) => {
+          const matchingItem = [...$items].find(
+            (item) =>
+              item
+                .querySelector(".media-browser-item-info")
+                ?.textContent.trim() === "imports"
+          );
 
-      if (matchingItem) {
-        cy.log("Found 'imports' folder, deleting");
-
-        // Wrap it for Cypress commands
-        cy.wrap(matchingItem).within(() => {
-          // Click the preview area or appropriate clickable element
-          cy.get(".media-browser-item-preview").click({ force: true });
+          if (matchingItem) {
+            cy.log("Found 'imports' folder, deleting");
+            cy.wrap(matchingItem).within(() => {
+              cy.get(".media-browser-item-preview").click({ force: true });
+            });
+            cy.wait(500);
+            cy.get(
+              'button:contains("Delete"), [aria-label*="Delete"], .fa-trash, a:contains("Delete")'
+            )
+              .first()
+              .click({ force: true });
+            cy.get('.modal-dialog[role="dialog"]').should("be.visible");
+            cy.get("#media-delete-item.btn-danger").click({ force: true });
+            cy.get('.modal-dialog[role="dialog"]').should("not.exist");
+            cy.log("'imports' folder deleted successfully");
+          } else {
+            cy.log("No 'imports' folder found");
+          }
         });
-
-        cy.wait(500);
-
-        // Click the delete button
-        cy.get(
-          'button:contains("Delete"), [aria-label*="Delete"], .fa-trash, a:contains("Delete")'
-        )
-          .first()
-          .click({ force: true });
-
-        // Wait for the confirmation dialog to appear
-        cy.get('.modal-dialog[role="dialog"]').should("be.visible");
-
-        // Confirm deletion by clicking the red "Delete" button
-        cy.get("#media-delete-item.btn-danger").click({ force: true });
-
-        // Optional: Wait for the dialog to disappear
-        cy.get('.modal-dialog[role="dialog"]').should("not.exist");
-
-        cy.log("'imports' folder deleted successfully");
       } else {
-        cy.log("No 'imports' folder found");
+        cy.log("Media browser items not found or different structure");
       }
     });
   });

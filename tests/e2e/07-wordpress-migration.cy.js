@@ -24,7 +24,7 @@ describe("WordPress Migration", () => {
         true
       );
     });
-    // Zip the WordPress plugin folder
+    // Zip the WordPress plugin folder using Windows-compatible command
     cy.exec(
       "powershell -Command \"Compress-Archive -Path 'src\\plugins\\migration\\wordpress\\*' -DestinationPath 'cypress\\fixtures\\plg_wordpress.zip' -Force\""
     );

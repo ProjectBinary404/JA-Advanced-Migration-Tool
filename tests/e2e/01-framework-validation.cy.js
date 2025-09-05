@@ -25,7 +25,14 @@ describe("Framework Validation", () => {
       Cypress.env("joomlaAdminPass"),
       true
     );
-    cy.cancelTour();
+
+    // Handle any shepherd tour popups
+    cy.get("body").then(($body) => {
+      if ($body.find(".shepherd-button-primary").length > 0) {
+        cy.get(".shepherd-button-primary").click({ force: true });
+      }
+    });
+
     // Log current URL for debugging
     cy.url().then((url) => {
       cy.log(`Current URL after login: ${url}`);
@@ -61,6 +68,13 @@ describe("Framework Validation", () => {
       Cypress.env("joomlaAdminPass"),
       true
     );
+
+    // Handle any shepherd tour popups
+    cy.get("body").then(($body) => {
+      if ($body.find(".shepherd-button-primary").length > 0) {
+        cy.get(".shepherd-button-primary").click({ force: true });
+      }
+    });
 
     // Navigate to users section
     cy.visit("/administrator/index.php?option=com_users");
