@@ -81,7 +81,7 @@ jobs:
         env:
           JOOMLA_BASE_URL: http://localhost:8080
           JOOMLA_ADMIN_USER: admin
-          JOOMLA_ADMIN_PASS: admin123
+          JOOMLA_ADMIN_PASS: admin123423454664@
           DBUS_SESSION_BUS_ADDRESS: /dev/null
 
       - name: Get version from XML

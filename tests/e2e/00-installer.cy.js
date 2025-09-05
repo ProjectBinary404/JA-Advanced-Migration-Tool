@@ -19,7 +19,7 @@ describe("Joomla Installation Wizard", () => {
       .type(Cypress.env("joomlaAdminUser") || "admin");
     cy.get("#jform_admin_password")
       .clear()
-      .type(Cypress.env("joomlaAdminPass") || "admin1234234");
+      .type(Cypress.env("joomlaAdminPass") || "admin123423454664@");
     cy.get("#step2").click();
 
     // --- Step 3: Database ---
