@@ -34,38 +34,13 @@ jobs:
         ports:
           - 8080:80
         options: >-
-          --health-cmd="curl -f http://localhost/ || exit 1"
+          --health-cmd="curl -f http://localhost/installation/index.php || exit 1"
           --health-interval=15s
           --health-timeout=10s
           --health-retries=20
 
     steps:
       - uses: actions/checkout@v4
-
-      # Provide preconfigured Joomla config
-      - name: Copy configuration.php into Joomla container
-        run: |
-          docker cp ./configuration.php $(docker ps -qf "ancestor=joomla:6.0-php8.3-apache"):/var/www/html/configuration.php
-
-      # Seed admin user into Joomla DB
-      - name: Seed Joomla DB
-        run: |
-          docker exec $(docker ps -qf "ancestor=mysql:8") \
-            mysql -uroot -proot joomla <<'EOF'
-            INSERT IGNORE INTO jos_users (id, name, username, email, password, params)
-              VALUES (991, 'Super User', 'admin', 'admin@example.com',
-                '$2y$10$wV9.dba1vILz8e/u7JmLleS1Dwb3XLCza36/bvtxjFBXHW6ayLuFu', '{}');
-            INSERT IGNORE INTO jos_user_usergroup_map (user_id, group_id)
-              VALUES (991, 8);
-          EOF
-
-      # Ensure guided tours table exists and disable it
-      - name: Disable Joomla Guided Tours
-        run: |
-          docker exec $(docker ps -qf "ancestor=mysql:8") \
-            mysql -uroot -proot joomla -e "CREATE TABLE IF NOT EXISTS jos_postinstall_messages (postinstall_message_id bigint(20) unsigned NOT NULL AUTO_INCREMENT, extension_id bigint(20) NOT NULL DEFAULT '0', title_key varchar(255) NOT NULL DEFAULT '', description_key varchar(255) NOT NULL DEFAULT '', action_key varchar(255) DEFAULT '', language_extension varchar(255) NOT NULL DEFAULT 'com_postinstall', language_client_id tinyint(3) NOT NULL DEFAULT '1', type enum('message','action') NOT NULL DEFAULT 'message', action_file varchar(255) DEFAULT '', action varchar(255) DEFAULT '', condition_file varchar(255) DEFAULT '', condition_method varchar(255) DEFAULT '', version_introduced varchar(50) NOT NULL DEFAULT '', enabled tinyint(3) NOT NULL DEFAULT '1', PRIMARY KEY (postinstall_message_id), KEY idx_enabled (enabled), KEY idx_condition (condition_file,condition_method)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;"
-          docker exec $(docker ps -qf "ancestor=mysql:8") \
-            mysql -uroot -proot joomla -e "UPDATE jos_postinstall_messages SET enabled = 0;"
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -84,14 +59,14 @@ jobs:
       - name: Install NPM dependencies
         run: npm install
 
-      - name: Wait for Joomla DB to be ready
+      - name: Wait for Joomla installer to be ready
         run: |
           for i in {1..40}; do
-            if docker exec $(docker ps -qf "ancestor=mysql:8") mysql -uroot -proot joomla -e "SHOW TABLES LIKE 'jos_users';" | grep -q jos_users; then
-              echo "✅ Joomla DB is ready"
+            if curl -f http://localhost:8080/installation/index.php > /dev/null 2>&1; then
+              echo "✅ Joomla installer is ready"
               break
             fi
-            echo "⏳ Waiting for Joomla DB..."
+            echo "⏳ Waiting for Joomla installer..."
             sleep 10
           done
 
@@ -151,10 +126,9 @@ jobs:
 
       - name: Create Release
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: |
-          gh release create v${{ steps.increment_version.outputs.new_version }} \
-          cypress/fixtures/com_cmsmigrator_v${{ steps.increment_version.outputs.new_version }}.zip \
-          --title "Release v${{ steps.increment_version.outputs.new_version }}" \
-          --notes "Automated release of Joomla Advanced Migration Tool v${{ steps.increment_version.outputs.new_version }}"
+        run: gh release create v${{ steps.increment_version.outputs.new_version }} \
+              cypress/fixtures/com_cmsmigrator_v${{ steps.increment_version.outputs.new_version }}.zip \
+              --title "Release v${{ steps.increment_version.outputs.new_version }}" \
+              --notes "Automated release of Joomla Advanced Migration Tool v${{ steps.increment_version.outputs.new_version }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
