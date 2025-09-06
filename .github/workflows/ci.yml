@@ -57,6 +57,11 @@ jobs:
               VALUES (991, 8);
           EOF
 
+      - name: Create jos_postinstall_messages table if not exists
+        run: |
+          docker exec $(docker ps -qf "ancestor=mysql:8") \
+            mysql -uroot -proot joomla -e "CREATE TABLE IF NOT EXISTS jos_postinstall_messages (postinstall_message_id bigint(20) unsigned NOT NULL AUTO_INCREMENT, extension_id bigint(20) NOT NULL DEFAULT '0', title_key varchar(255) NOT NULL DEFAULT '', description_key varchar(255) NOT NULL DEFAULT '', action_key varchar(255) DEFAULT '', language_extension varchar(255) NOT NULL DEFAULT 'com_postinstall', language_client_id tinyint(3) NOT NULL DEFAULT '1', type enum('message','action') NOT NULL DEFAULT 'message', action_file varchar(255) DEFAULT '', action varchar(255) DEFAULT '', condition_file varchar(255) DEFAULT '', condition_method varchar(255) DEFAULT '', version_introduced varchar(50) NOT NULL DEFAULT '', enabled tinyint(3) NOT NULL DEFAULT '1', PRIMARY KEY (postinstall_message_id), KEY idx_enabled (enabled), KEY idx_condition (condition_file,condition_method)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;"
+
       - name: Disable Joomla Guided Tours
         run: |
           docker exec $(docker ps -qf "ancestor=mysql:8") \
