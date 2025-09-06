@@ -84,14 +84,14 @@ jobs:
       - name: Install NPM dependencies
         run: npm install
 
-      - name: Wait for Joomla installer to be ready
+      - name: Wait for Joomla DB to be ready
         run: |
           for i in {1..40}; do
-            if curl -f http://localhost:8080/installation/index.php > /dev/null 2>&1; then
-              echo "✅ Joomla installer is ready"
+            if docker exec $(docker ps -qf "ancestor=mysql:8") mysql -uroot -proot joomla -e "SHOW TABLES LIKE 'jos_postinstall_messages';" | grep -q jos_postinstall_messages; then
+              echo "✅ Joomla DB is ready"
               break
             fi
-            echo "⏳ Waiting for Joomla installer..."
+            echo "⏳ Waiting for Joomla DB..."
             sleep 10
           done
 
