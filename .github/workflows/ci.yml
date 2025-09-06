@@ -42,6 +42,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Copy configuration.php into Joomla container
+        run: |
+          docker cp ./configuration.php $(docker ps -qf "ancestor=joomla:6.0-php8.3-apache"):/var/www/html/configuration.php
+
+      - name: Seed Joomla DB
+        run: |
+          docker exec $(docker ps -qf "ancestor=mysql:8") \
+            mysql -uroot -proot joomla <<'EOF'
+            INSERT INTO jos_users (id, name, username, email, password, params)
+              VALUES (991, 'Super User', 'admin', 'admin@example.com',
+                '$2y$10$wV9.dba1vILz8e/u7JmLleS1Dwb3XLCza36/bvtxjFBXHW6ayLuFu', '{}');
+            INSERT INTO jos_user_usergroup_map (user_id, group_id)
+              VALUES (991, 8);
+          EOF
+
+      - name: Disable Joomla Guided Tours
+        run: |
+          docker exec $(docker ps -qf "ancestor=mysql:8") \
+            mysql -uroot -proot joomla -e "UPDATE jos_postinstall_messages SET enabled = 0;"
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -126,9 +146,10 @@ jobs:
 
       - name: Create Release
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: gh release create v${{ steps.increment_version.outputs.new_version }} \
-              cypress/fixtures/com_cmsmigrator_v${{ steps.increment_version.outputs.new_version }}.zip \
-              --title "Release v${{ steps.increment_version.outputs.new_version }}" \
-              --notes "Automated release of Joomla Advanced Migration Tool v${{ steps.increment_version.outputs.new_version }}"
+        run:
+          gh release create v${{ steps.increment_version.outputs.new_version }} \
+          cypress/fixtures/com_cmsmigrator_v${{ steps.increment_version.outputs.new_version }}.zip \
+          --title "Release v${{ steps.increment_version.outputs.new_version }}" \
+          --notes "Automated release of Joomla Advanced Migration Tool v${{ steps.increment_version.outputs.new_version }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
