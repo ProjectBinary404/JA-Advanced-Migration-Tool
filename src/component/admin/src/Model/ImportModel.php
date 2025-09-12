@@ -35,8 +35,15 @@ class ImportModel extends BaseModel
     public function __construct($config = [])
     {
         parent::__construct($config);
-        $this->app = Factory::getApplication();
+        $app = $this->getApp();
     }
+        protected function getApp()
+    {
+        return $this->getMVCFactory()
+            ? $this->getMVCFactory()->createApplication('site', [])
+            : Factory::getApplication();
+    }
+
     //Our importFunction doesn't know how to convert/parse this data
     public function import($file, $sourceCms, $sourceUrl = '', $ftpConfig = [], $importAsSuperUser = false)
     {
