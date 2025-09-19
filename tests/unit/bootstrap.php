@@ -45,7 +45,7 @@ if (!defined('UPLOAD_ERR_NO_FILE')) {
 
 // Set up autoloader for component classes
 spl_autoload_register(function ($class) {
-    $prefix = 'Binary\\Component\\CmsMigrator\\Administrator\\';
+    $prefix = 'Joomla\\Component\\CmsMigrator\\Administrator\\';
     $baseDir = __DIR__ . '/../../src/component/admin/src/';
     
     $len = strlen($prefix);
@@ -81,7 +81,7 @@ spl_autoload_register(function ($class) {
 
 // Set up autoloader for test helper classes
 spl_autoload_register(function ($class) {
-    $prefix = 'Binary\\Component\\CmsMigrator\\Tests\\';
+    $prefix = 'Joomla\\Component\\CmsMigrator\\Tests\\';
     $baseDir = __DIR__ . '/';
     
     $len = strlen($prefix);

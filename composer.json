@@ -1,5 +1,5 @@
 {
-    "name": "binary/cms-migrator",
+    "name": "joomla/cms-migrator",
     "description": "Advanced Migration Tool for Joomla - Migrate from WordPress and other CMS platforms",
     "type": "joomla-component",
     "keywords": [
