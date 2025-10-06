@@ -175,7 +175,7 @@ jobs:
       - name: Create wp-all-export plugin zip
         run: |
           cd src/cms-export-plugins/wp-all-export
-          zip -r ../../../../cypress/fixtures/plg_wp_all_export_v${{ env.version_wp_all_export }}.zip .
+          zip -r ../../../cypress/fixtures/plg_wp_all_export_v${{ env.version_wp_all_export }}.zip .
 
       - name: Verify zip files exist
         run: ls -lh cypress/fixtures/
