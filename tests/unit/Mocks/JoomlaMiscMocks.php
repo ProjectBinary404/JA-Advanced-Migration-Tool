@@ -39,16 +39,64 @@ namespace Joomla\CMS\Event;
 class AbstractEvent
 {
     protected $name;
-    protected $results = [];
+    protected $arguments = [];
     
-    public function __construct($name)
+    public function __construct($name, array $arguments = [])
     {
         $this->name = $name;
+        $this->arguments = $arguments;
     }
     
     public function getName()
     {
         return $this->name;
+    }
+    
+    public function getArguments()
+    {
+        return $this->arguments;
+    }
+    
+    public function getArgument($name, $default = null)
+    {
+        return $this->arguments[$name] ?? $default;
+    }
+    
+    public function setArgument($name, $value)
+    {
+        $this->arguments[$name] = $value;
+        return $this;
+    }
+}
+
+namespace Joomla\CMS\Event\Result;
+
+/**
+ * Mock interface for ResultAwareInterface
+ */
+interface ResultAwareInterface
+{
+}
+
+/**
+ * Mock trait for ResultAware
+ */
+trait ResultAware
+{
+    /**
+     * Add a result to the event.
+     *
+     * @param   mixed  $result  The result to add
+     *
+     * @return  void
+     */
+    public function addResult($result): void
+    {
+        if (!isset($this->arguments['result'])) {
+            $this->arguments['result'] = [];
+        }
+        
+        $this->arguments['result'][] = $result;
     }
 }
 
